@@ -22,10 +22,10 @@ module.exports = async (io, socket) => {
       .then((response) => {
         // See the MessagingTopicManagementResponse reference documentation
         // for the contents of response.
-        console.log("Successfully subscribed to topic:", response);
+        // console.log("Successfully subscribed to topic:", response);
       })
       .catch((error) => {
-        console.log("Error subscribing to topic:", error);
+        // console.log("Error subscribing to topic:", error);
       });
   });
   socket.on("disconnect", async () => {

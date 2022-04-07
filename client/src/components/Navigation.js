@@ -4,6 +4,7 @@ import { GiHamburgerMenu } from "react-icons/gi";
 import { GrClose } from "react-icons/gr";
 import { useDispatch, useSelector } from "react-redux";
 import { logout } from "../slice/userSlice";
+import NotificationBell from "./NotificationBell";
 function Navigation() {
   const [hide, setHide] = useState(true);
   const user = useSelector((state) => state.user);
@@ -15,12 +16,12 @@ function Navigation() {
           Chattup
         </Link>
         <ul
-          className={`flex gap-4 items-center pr-10 font-semibold
+          className={`flex gap-5 items-center pr-10 font-semibold
         sm:flex-col sm:absolute sm:w-full sm:bg-white sm:pr-0 sm:top-full ${
           hide ? "sm:hidden" : ""
         } sm:mt-1 transition-all duration-250`}
         >
-          {!(user && user.userName) && (
+          {!user.userName && (
             <>
               <li className="hover:bg-gray-200 sm:w-full">
                 <Link className="block px-6 py-4 sm:text-center" to={"/login"}>
@@ -34,7 +35,7 @@ function Navigation() {
               </li>
             </>
           )}
-          {user && user.userName && (
+          {user.userName && (
             <>
               <li className="sm:w-full">
                 <div className="flex gap-5 items-center justify-center">
@@ -45,6 +46,7 @@ function Navigation() {
                   <p className="inline w-fit h-fit">{user.userName}</p>
                 </div>
               </li>
+              <NotificationBell className="sm:hidden"></NotificationBell>
               <li className="hover:bg-gray-200 sm:w-full">
                 <Link className="block px-6 py-4 sm:text-center" to={"/chat"}>
                   Trò chuyện
@@ -67,8 +69,9 @@ function Navigation() {
           )}
         </ul>
       </div>
+      <NotificationBell className="hidden sm:block my-auto mr-8"></NotificationBell>
       <button
-        className="hidden sm:block"
+        className="hidden sm:block my-auto ml-5"
         onClick={() => {
           setHide(!hide);
         }}
@@ -76,7 +79,7 @@ function Navigation() {
         {hide ? (
           <GiHamburgerMenu className="h-5 w-5 mr-5 " />
         ) : (
-          <GrClose className="h-5 w-5  mr-5 " />
+          <GrClose className="h-5 w-5 mr-5 " />
         )}
       </button>
     </nav>

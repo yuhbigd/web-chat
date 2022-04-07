@@ -1,4 +1,5 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+import { deleteOldToken } from "../Firebase/firebase";
 import { socket } from "../socket";
 
 const initialState = {};
@@ -63,6 +64,13 @@ export const logout = createAsyncThunk("user/logout", async () => {
     credentials: "include",
   });
   const data = await response.json();
+  await deleteOldToken();
+  //delete old service worker
+  navigator.serviceWorker.getRegistrations().then(function (registrations) {
+    for (let registration of registrations) {
+      registration.unregister();
+    }
+  });
   localStorage.clear();
   return {};
 });
@@ -81,6 +89,14 @@ const userSlice = createSlice({
     },
     resetUser(state, action) {
       return {};
+    },
+    updateNotifications(state, action) {
+      const notifications = action.payload.notifications;
+      state.friendRequestNotifications = notifications;
+    },
+    updateFriends(state, action) {
+      const friends = action.payload.friends;
+      state.friends = friends;
     },
   },
   extraReducers(builder) {
@@ -118,6 +134,11 @@ const userSlice = createSlice({
       });
   },
 });
-export const { getUserFromLocal, resetUser } = userSlice.actions;
+export const {
+  getUserFromLocal,
+  resetUser,
+  updateNotifications,
+  updateFriends,
+} = userSlice.actions;
 
 export default userSlice.reducer;

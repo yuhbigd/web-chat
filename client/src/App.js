@@ -8,7 +8,16 @@ import Landing from "./pages/Landing";
 import { useDispatch, useSelector } from "react-redux";
 import { getLogin, getUserFromLocal } from "./slice/userSlice";
 import { socket } from "./socket";
-import { getNotificationPermission } from "./Firebase/firebase";
+import { sendNotiToken } from "./Firebase/firebase";
+function usedToGetNoti() {
+  let permission = Notification.permission;
+  if (permission === "default") {
+    Notification.requestPermission();
+  }
+  if (permission === "granted") {
+    sendNotiToken();
+  }
+}
 function App() {
   const dispatch = useDispatch();
   const updateUserFt = useRef(0);
@@ -16,7 +25,7 @@ function App() {
   useEffect(() => {
     dispatch(getUserFromLocal());
     socket.on("FE_connected", () => {
-      console.log(socket.id);
+      usedToGetNoti();
     });
   }, []);
   useEffect(() => {

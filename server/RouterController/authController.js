@@ -41,6 +41,7 @@ login_get = async (req, res) => {
         "messageWithFriend",
         "friends",
         "groups",
+        "friendRequestNotifications",
       ]),
     });
   } catch (error) {
@@ -82,6 +83,7 @@ signup_post = async (req, res) => {
         "messageWithFriend",
         "friends",
         "groups",
+        "friendRequestNotifications",
       ]),
     });
   } catch (error) {
@@ -127,6 +129,7 @@ login_post = async (req, res) => {
         "messageWithFriend",
         "friends",
         "groups",
+        "friendRequestNotifications",
       ]),
     });
   } catch (error) {

@@ -2,6 +2,7 @@ const mongoose = require("mongoose");
 const bcrypt = require("bcrypt");
 const sanitize = require("mongo-sanitize");
 const { isEmail } = require("validator");
+const { now } = require("lodash");
 const userSchema = new mongoose.Schema({
   email: {
     type: String,
@@ -27,34 +28,6 @@ const userSchema = new mongoose.Schema({
     default:
       "https://scr.vn/wp-content/uploads/2020/07/Avatar-Facebook-tr%E1%BA%AFng.jpg",
   },
-  messageWithGroup: [
-    {
-      body: String,
-      with: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "groups",
-        index: true,
-      },
-      createAt: {
-        type: Date,
-        index: true,
-      },
-    },
-  ],
-  messageWithFriend: [
-    {
-      body: String,
-      with: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "users",
-        index: true,
-      },
-      createAt: {
-        type: Date,
-        index: true,
-      },
-    },
-  ],
   friends: [
     {
       info: {
@@ -62,9 +35,16 @@ const userSchema = new mongoose.Schema({
         ref: "users",
         index: true,
       },
+      message: {
+        type: String,
+      },
       unRead: {
         type: Number,
         default: 0,
+      },
+      lastTimeCommunicate: {
+        type: Date,
+        default: now,
       },
     },
   ],
@@ -79,6 +59,13 @@ const userSchema = new mongoose.Schema({
         type: Number,
         default: 0,
       },
+      message: {
+        type: String,
+      },
+      lastTimeCommunicate: {
+        type: Date,
+        default: now,
+      },
     },
   ],
   friendRequestNotifications: [
@@ -87,13 +74,12 @@ const userSchema = new mongoose.Schema({
         type: String,
         required: true,
       },
-      isAccepted: {
-        type: Boolean,
-        default: false,
-      },
-      unread: {
-        type: Boolean,
-        default: false,
+      userName: String,
+      avatar: String,
+      friendId: String,
+      timestamp: {
+        type: Date,
+        default: now,
       },
     },
   ],

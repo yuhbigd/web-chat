@@ -3,10 +3,23 @@ import { FaUserFriends } from "react-icons/fa";
 import { useDispatch, useSelector } from "react-redux";
 import { socket } from "../socket";
 import NotificationContainer from "./NotificationContainer";
-import { updateNotifications } from "../slice/userSlice";
+import { updateNotifications, updateFriends } from "../slice/userSlice";
 function NotificationBell(props) {
   const dispatch = useDispatch();
   useEffect(() => {
+    socket.on("FE_receive_accepted_friend_request", ({ friends }) => {
+      dispatch(updateFriends({ friends }));
+    });
+    socket.on(
+      "FE_accept_friend_request_succeeded",
+      ({ friends, notifications }) => {
+        dispatch(updateFriends({ friends }));
+        dispatch(updateNotifications({ notifications }));
+      },
+    );
+    socket.on("FE_refuse_friend_request_succeeded", ({ notifications }) => {
+      dispatch(updateNotifications({ notifications }));
+    });
     socket.on("FE_receive_friend_request", (friendRequestNotifications) => {
       dispatch(
         updateNotifications({

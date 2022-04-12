@@ -10,7 +10,10 @@ const checkUser = async (req, res, next) => {
     try {
       const { user } = await jwt.verify(token, process.env.SECRET_KEY);
       if (user) {
-        req.user = await User.findOne({ _id: user._id });
+        req.user = await User.findOne({ _id: user._id }).populate(
+          "friends.info",
+          "_id avatar userName",
+        );
         next();
       } else {
         res.clearCookie("token", {
@@ -78,7 +81,10 @@ async function getNewToken(refreshToken) {
     return {};
   }
 
-  const user = await User.findOne({ _id: userId });
+  const user = await User.findOne({ _id: userId }).populate(
+    "friends.info",
+    "_id avatar userName",
+  );
 
   if (!user) {
     return {};

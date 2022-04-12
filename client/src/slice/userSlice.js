@@ -79,13 +79,9 @@ const userSlice = createSlice({
   name: "user",
   initialState,
   reducers: {
-    getUserFromLocal(state, action) {
-      let user = JSON.parse(localStorage.getItem("user"));
-      if (user) {
-        state = user;
-        return state;
-      }
-      return {};
+    setUser(state, action) {
+      state = JSON.parse(action.payload.user);
+      return state;
     },
     resetUser(state, action) {
       return {};
@@ -98,11 +94,20 @@ const userSlice = createSlice({
       const friends = action.payload.friends;
       state.friends = friends;
     },
+    updateFriend(state, action) {
+      const friendId = action.payload.friend.info._id;
+      for (let i = 0; i < state.friends.length; i++) {
+        if (state.friends[i].info._id === friendId) {
+          state.friends[i] = action.payload.friend;
+          break;
+        }
+      }
+    },
   },
   extraReducers(builder) {
     builder
       .addCase(login.pending, (state, action) => {
-        return "pending";
+        return { pending: "pending" };
       })
       .addCase(login.fulfilled, (state, action) => {
         socket.disconnect();
@@ -117,15 +122,18 @@ const userSlice = createSlice({
         socket.connect();
         return acton.payload;
       })
+      .addCase(getLogin.rejected, (state, action) => {
+        return {};
+      })
       .addCase(postSignup.pending, (state, action) => {
-        return "pending";
+        return { pending: "pending" };
       })
       .addCase(postSignup.fulfilled, (state, action) => {
+        socket.disconnect();
+        socket.connect();
         return action.payload;
       })
       .addCase(postSignup.rejected, (state, action) => {
-        socket.disconnect();
-        socket.connect();
         return { error: action.error.message };
       })
       .addCase(logout.fulfilled, (state, action) => {
@@ -135,10 +143,11 @@ const userSlice = createSlice({
   },
 });
 export const {
-  getUserFromLocal,
+  setUser,
   resetUser,
   updateNotifications,
   updateFriends,
+  updateFriend,
 } = userSlice.actions;
 
 export default userSlice.reducer;

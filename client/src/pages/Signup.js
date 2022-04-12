@@ -4,7 +4,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import signupPic from "../assets/images/5595f79f09da8b3623f489350e633c7b.png";
 import { resetUser, postSignup } from "../slice/userSlice";
-function Signup() {
+function Signup(props) {
   const [previewImage, setPreviewImage] = useState(
     "https://scr.vn/wp-content/uploads/2020/07/Avatar-Facebook-tr%E1%BA%AFng.jpg",
   );
@@ -18,10 +18,11 @@ function Signup() {
   const userName = useRef(null);
   const password = useRef("");
   const navigation = useNavigate();
-
+  const [height, setHeight] = useState(`h-full`);
   //reset user to null
   useEffect(() => {
     dispatch(resetUser());
+    setHeight(`h-[calc(100vh-${props.getNavHeight() + 40}px)]`);
   }, []);
 
   useEffect(() => {
@@ -182,11 +183,9 @@ function Signup() {
             shadow-sm 
             disabled:bg-slate-500 
             disabled:hover:bg-slate-500"
-            disabled={
-              uploadingImagePending || user === "pending" ? true : false
-            }
+            disabled={uploadingImagePending || user.pending ? true : false}
           >
-            {uploadingImagePending || user === "pending" ? (
+            {uploadingImagePending || user.pending ? (
               <svg
                 role="status"
                 className="mx-auto w-6 h-6 text-gray-200 animate-spin dark:text-gray-600 fill-blue-600"
@@ -211,8 +210,8 @@ function Signup() {
       </div>
 
       <div
-        className="col-start-5 col-span-8
-      sm:hidden sm:col-auto"
+        className={`col-start-5 col-span-8 
+      sm:hidden h-[calc(100vh-100px)]`}
       >
         <img
           src={signupPic}

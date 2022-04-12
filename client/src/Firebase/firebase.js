@@ -29,7 +29,6 @@ export function sendNotiToken() {
   getToken(messaging, { vapidKey: publicKey })
     .then((currentToken) => {
       if (currentToken) {
-        console.log(currentToken);
         socket.emit("BE_subscribe_user_topic_noti", currentToken);
       } else {
         // Show permission request UI
@@ -43,7 +42,7 @@ export function sendNotiToken() {
       // ...
     });
   onMessage(messaging, (payload) => {
-    console.log("Message received. ", JSON.stringify(payload));
+    // console.log("Message received. ", JSON.stringify(payload));
   });
 }
 export default app;

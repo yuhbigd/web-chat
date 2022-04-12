@@ -5,12 +5,16 @@ import { GrClose } from "react-icons/gr";
 import { useDispatch, useSelector } from "react-redux";
 import { logout } from "../slice/userSlice";
 import NotificationBell from "./NotificationBell";
-function Navigation() {
+function Navigation(props, ref) {
   const [hide, setHide] = useState(true);
   const user = useSelector((state) => state.user);
   const dispatch = useDispatch();
   return (
-    <nav className="sticky top-0 left-0 bg-white w-full shadow sm:flex sm:justify-between">
+    <nav
+      onClick={props.onClick}
+      className="sticky top-0 left-0 bg-white w-full shadow sm:flex sm:justify-between"
+      ref={ref}
+    >
       <div className="container m-auto flex justify-between items-center text-gray-700 z-50">
         <Link className="pl-8 py-4 text-xl font-bold" to={"/"}>
           Chattup
@@ -69,7 +73,9 @@ function Navigation() {
           )}
         </ul>
       </div>
-      <NotificationBell className="hidden sm:block my-auto mr-8"></NotificationBell>
+      {user._id && (
+        <NotificationBell className="hidden sm:block my-auto mr-8"></NotificationBell>
+      )}
       <button
         className="hidden sm:block my-auto ml-5"
         onClick={() => {
@@ -86,4 +92,4 @@ function Navigation() {
   );
 }
 
-export default Navigation;
+export default React.forwardRef(Navigation);

@@ -1,18 +1,19 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
 import loginPic from "../assets/images/8e4eeb53eb1ca7fd9b2521420f6f1f40.png";
 import { resetUser, login } from "../slice/userSlice";
-function Login() {
+function Login(props) {
   const email = useRef("");
   const password = useRef("");
   const user = useSelector((state) => state.user);
   const dispatch = useDispatch();
   const navigation = useNavigate();
-
+  const [height, setHeight] = useState(``);
   //reset user to null
   useEffect(() => {
     dispatch(resetUser());
+    setHeight(`h-[calc(100vh-${props.getNavHeight() + 40}px)]`);
   }, []);
 
   useEffect(() => {
@@ -87,9 +88,9 @@ function Login() {
             shadow-sm
             disabled:bg-slate-500 
             disabled:hover:bg-slate-500"
-            disabled={user === "pending" ? true : false}
+            disabled={user.pending ? true : false}
           >
-            {user === "pending" ? (
+            {user.pending ? (
               <svg
                 role="status"
                 className="mx-auto w-6 h-6 text-gray-200 animate-spin dark:text-gray-600 fill-blue-600"
@@ -119,8 +120,8 @@ function Login() {
         </p>
       </div>
       <div
-        className="col-start-5 col-span-8
-      sm:hidden sm:col-auto"
+        className={`col-start-5 col-span-8 
+      sm:hidden h-[calc(100vh-100px)]`}
       >
         <img
           src={loginPic}

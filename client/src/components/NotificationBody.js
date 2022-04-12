@@ -5,23 +5,8 @@ import { updateFriends, updateNotifications } from "../slice/userSlice";
 import { socket } from "../socket";
 
 function NotificationBody(props) {
+  console.log("sdaaa");
   let notification = props.notification;
-  const dispatch = useDispatch();
-  useEffect(() => {
-    socket.on("FE_receive_accepted_friend_request", ({ friends }) => {
-      dispatch(updateFriends({ friends }));
-    });
-    socket.on(
-      "FE_accept_friend_request_succeeded",
-      ({ friends, notifications }) => {
-        dispatch(updateFriends({ friends }));
-        dispatch(updateNotifications({ notifications }));
-      },
-    );
-    socket.on("FE_refuse_friend_request_succeeded", ({ notifications }) => {
-      dispatch(updateNotifications({ notifications }));
-    });
-  }, []);
 
   function acceptHandle(e) {
     e.preventDefault();
@@ -43,7 +28,7 @@ function NotificationBody(props) {
     >
       <img
         src={notification.avatar}
-        className="h-10 object-cover rounded-full"
+        className="h-10 w-10 object-cover rounded-full"
       />
       <div className="grow">
         <div className="flex flex-col items-left">
@@ -78,4 +63,4 @@ function NotificationBody(props) {
   );
 }
 
-export default NotificationBody;
+export default React.memo(NotificationBody);

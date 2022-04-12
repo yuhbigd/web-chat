@@ -1,14 +1,19 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import landingPic from "../assets/images/image_processing20210120-16343-z9u17a.jpg";
-function Landing() {
+function Landing(props) {
   const user = useSelector((state) => state.user);
   let navigate = useNavigate();
+  const [height, setHeight] = useState(``);
+  useEffect(() => {
+    setHeight(`h-[calc(100vh-${props.getNavHeight() + 40}px)]`);
+  }, []);
+
   return (
     <div
-      className="grow h-full grid grid-cols-12 m-5 gap-5 
-    sm:grid sm:grid-cols-1 sm:grid-rows-2 grid-flow-col"
+      className={`grow grid grid-cols-12 p-5 gap-5 
+    sm:grid sm:grid-cols-1 sm:grid-rows-2 grid-flow-col overflow-auto`}
     >
       <div
         className="col-start-1 col-span-4 flex flex-col justify-center gap-14
@@ -45,13 +50,13 @@ function Landing() {
         </button>
       </div>
       <div
-        className="col-start-5 col-span-8 
-      sm:col-auto"
+        className={`col-start-5 col-span-8 
+      sm:col-auto sm:mt-4 h-[calc(100vh-100px)]`}
       >
         <img
           src={landingPic}
           alt="landing image"
-          className="object-contain w-full h-[full]"
+          className="object-contain h-full w-full"
         />
       </div>
     </div>

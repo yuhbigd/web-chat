@@ -1,6 +1,7 @@
 const User = require("../models/userModel");
 const { getMessaging } = require("firebase-admin/messaging");
 module.exports = async (io, socket) => {
+  console.log("con", socket.id);
   try {
     await User.updateOne(
       {
@@ -29,6 +30,7 @@ module.exports = async (io, socket) => {
       });
   });
   socket.on("disconnect", async () => {
+    console.log("dis", socket.id);
     try {
       await User.updateOne(
         {

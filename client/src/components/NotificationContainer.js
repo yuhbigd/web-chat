@@ -11,10 +11,16 @@ function NotificationContainer(props) {
       (a, b) => new Date(b.timestamp) - new Date(a.timestamp),
     );
   }
+  // thieu key o day
   return (
     <ul className={props.className}>
       {friendRequestNotifications.map((notification) => {
-        return <NotificationBody notification={notification} />;
+        return (
+          <NotificationBody
+            key={notification._id}
+            notification={notification}
+          />
+        );
       })}
     </ul>
   );

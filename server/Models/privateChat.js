@@ -1,5 +1,11 @@
+const { now } = require("lodash");
 const mongoose = require("mongoose");
-const privateChatSchema = new mongoose.Schema({
+const chatSchema = new mongoose.Schema({
+  roomId: {
+    type: String,
+    required: true,
+    index: true,
+  },
   body: {
     type: String,
     required: true,
@@ -18,9 +24,9 @@ const privateChatSchema = new mongoose.Schema({
   },
   createAt: {
     type: Date,
-    default: Date.now,
+    default: now(),
   },
 });
-const privateChat = mongoose.model("groupChats", privateChatSchema);
+const Chat = mongoose.model("messages", chatSchema);
 
-module.exports = privateChat;
+module.exports = Chat;

@@ -2,7 +2,6 @@ const mongoose = require("mongoose");
 const bcrypt = require("bcrypt");
 const sanitize = require("mongo-sanitize");
 const { isEmail } = require("validator");
-const { now } = require("lodash");
 const userSchema = new mongoose.Schema({
   email: {
     type: String,
@@ -44,7 +43,7 @@ const userSchema = new mongoose.Schema({
       },
       lastTimeCommunicate: {
         type: Date,
-        default: now,
+        default: Date.now(),
       },
     },
   ],
@@ -64,7 +63,7 @@ const userSchema = new mongoose.Schema({
       },
       lastTimeCommunicate: {
         type: Date,
-        default: now,
+        default: Date.now(),
       },
     },
   ],
@@ -79,7 +78,7 @@ const userSchema = new mongoose.Schema({
       friendId: String,
       timestamp: {
         type: Date,
-        default: now,
+        default: Date.now(),
       },
     },
   ],
@@ -110,7 +109,10 @@ userSchema.pre("updateOne", async function (next) {
 });
 
 userSchema.statics.login = async function (email, password) {
-  const user = await this.findOne({ email: sanitize(email) });
+  const user = await this.findOne({ email: sanitize(email) }).populate(
+    "friends.info",
+    "_id avatar userName",
+  );
   if (user) {
     const isCorrectPass = await bcrypt.compare(
       sanitize(password),

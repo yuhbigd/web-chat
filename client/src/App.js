@@ -6,9 +6,10 @@ import Signup from "./pages/Signup";
 import Chat from "./pages/Chat";
 import Landing from "./pages/Landing";
 import { useDispatch, useSelector } from "react-redux";
-import { getLogin, getUserFromLocal } from "./slice/userSlice";
+import { getLogin, setUser } from "./slice/userSlice";
 import { socket } from "./socket";
 import { sendNotiToken } from "./Firebase/firebase";
+import { createGlobalState } from "react-use";
 function usedToGetNoti() {
   let permission = Notification.permission;
   if (permission === "default") {
@@ -19,47 +20,60 @@ function usedToGetNoti() {
   }
 }
 function App() {
+  const navigationHeight = useRef();
   const dispatch = useDispatch();
-  const updateUserFt = useRef(0);
   const user = useSelector((state) => state.user);
   useEffect(() => {
-    dispatch(getUserFromLocal());
+    let cachedUser = localStorage.getItem("user");
+    if (cachedUser) {
+      dispatch(setUser({ user: cachedUser }));
+      dispatch(getLogin());
+    }
+    socket.offAny();
     socket.on("FE_connected", () => {
       usedToGetNoti();
     });
   }, []);
-  useEffect(() => {
-    if (updateUserFt.current === 0) {
-      updateUserFt.current = updateUserFt.current + 1;
-    } else if (updateUserFt.current === 1) {
-      if (user.email) {
-        dispatch(getLogin());
-        updateUserFt.current++;
-      }
-    }
-  }, [user]);
-
+  function getNavHeight() {
+    return navigationHeight.current.clientHeight;
+  }
   return (
     <BrowserRouter>
-      <div className="flex flex-col min-h-screen max-w-[1500px] mx-auto my-0">
-        <Navigation />
+      <div className="flex flex-col min-h-screen max-w-[1500px] mx-auto my-0 ">
+        <Navigation ref={navigationHeight} />
         <Routes>
-          <Route exact path="/" element={<Landing />}></Route>
+          <Route
+            exact
+            path="/"
+            element={<Landing getNavHeight={getNavHeight} />}
+          ></Route>
 
           <Route
             path="/login"
-            element={!user.email ? <Login /> : <Navigate to="/" replace />}
+            element={
+              !user.email ? (
+                <Login getNavHeight={getNavHeight} />
+              ) : (
+                <Navigate to="/" replace />
+              )
+            }
           ></Route>
           <Route
             path="/signup"
-            element={!user.email ? <Signup /> : <Navigate to="/" replace />}
+            element={
+              !user.email ? (
+                <Signup getNavHeight={getNavHeight} />
+              ) : (
+                <Navigate to="/" replace />
+              )
+            }
           ></Route>
 
-          {user.email && (
-            <>
-              <Route path="/chat" element={<Chat />}></Route>
-            </>
-          )}
+          <Route
+            path="/chat"
+            element={<Chat getNavHeight={getNavHeight} />}
+          ></Route>
+
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </div>

@@ -1,5 +1,6 @@
 const { getMessaging } = require("firebase-admin/messaging");
 const Chat = require("../Models/privateChat");
+const privateVideoChat = require("../Models/privateVideoChat");
 const User = require("../models/userModel");
 
 module.exports = (io, socket) => {
@@ -69,7 +70,9 @@ module.exports = (io, socket) => {
           console.log("Error sending message:", error);
         });
     } catch (error) {
-      console.log(error.message);
+      socket.emit("FE_ERROR", {
+        error: error.message,
+      });
     }
   });
   // khi client chap nhan ket ban
@@ -124,7 +127,9 @@ module.exports = (io, socket) => {
           });
         }
       } catch (error) {
-        console.log(error.message);
+        socket.emit("FE_ERROR", {
+          error: error.message,
+        });
       }
     },
   );
@@ -151,7 +156,9 @@ module.exports = (io, socket) => {
         });
       }
     } catch (error) {
-      console.log(error.message);
+      socket.emit("FE_ERROR", {
+        error: error.message,
+      });
     }
   });
 
@@ -164,16 +171,16 @@ module.exports = (io, socket) => {
   socket.on("BE_seen_messages", async ({ roomId }) => {
     try {
       const ids = roomId.split("_");
-      let toId;
+      let receiverId;
       if (ids[0] === socket.userId) {
-        toId = ids[1];
+        receiverId = ids[1];
       } else {
-        toId = ids[0];
+        receiverId = ids[0];
       }
       let user = await User.findOneAndUpdate(
         {
           _id: socket.userId,
-          "friends.info": toId,
+          "friends.info": receiverId,
         },
         {
           $set: {
@@ -184,7 +191,7 @@ module.exports = (io, socket) => {
       )
         .populate("friends.info", "_id avatar userName")
         .select({
-          friends: { $elemMatch: { info: toId } },
+          friends: { $elemMatch: { info: receiverId } },
           sockets: 1,
         });
       for (const socket of user.sockets) {
@@ -193,7 +200,9 @@ module.exports = (io, socket) => {
         });
       }
     } catch (error) {
-      console.log(error);
+      socket.emit("FE_ERROR", {
+        error: error.message,
+      });
     }
   });
 
@@ -201,17 +210,17 @@ module.exports = (io, socket) => {
   socket.on("BE_send_message", async ({ roomId, message }) => {
     try {
       const ids = roomId.split("_");
-      let toId;
+      let receiverId;
       if (ids[0] === socket.userId) {
-        toId = ids[1];
+        receiverId = ids[1];
       } else {
-        toId = ids[0];
+        receiverId = ids[0];
       }
       let now = Date.now();
       let chat = await Chat.create({
         body: message,
         from: socket.userId,
-        to: toId,
+        to: receiverId,
         createAt: now,
         roomId: roomId,
       });
@@ -221,7 +230,7 @@ module.exports = (io, socket) => {
 
       let toUser = await User.findOneAndUpdate(
         {
-          _id: toId,
+          _id: receiverId,
           "friends.info": socket.userId,
         },
         {
@@ -253,7 +262,7 @@ module.exports = (io, socket) => {
           title: `Từ ${toUser.userName}`,
           body: message,
         },
-        topic: toId,
+        topic: receiverId,
         webpush: {
           fcmOptions: {
             link: "/",
@@ -272,7 +281,7 @@ module.exports = (io, socket) => {
       let fromUser = await User.findOneAndUpdate(
         {
           _id: socket.userId,
-          "friends.info": toId,
+          "friends.info": receiverId,
         },
         {
           $set: {
@@ -284,7 +293,7 @@ module.exports = (io, socket) => {
       )
         .populate("friends.info", "_id avatar userName")
         .select({
-          friends: { $elemMatch: { info: toId } },
+          friends: { $elemMatch: { info: receiverId } },
           sockets: 1,
         });
       for (const fromSocket of fromUser.sockets) {
@@ -298,7 +307,9 @@ module.exports = (io, socket) => {
         }
       }
     } catch (e) {
-      console.log(e);
+      socket.emit("FE_ERROR", {
+        error: error.message,
+      });
     }
   });
   //lay tin nhan
@@ -314,6 +325,7 @@ module.exports = (io, socket) => {
           .skip(skippedMess)
           .limit(20);
         let pageCountRemain;
+        // neu mang chat trong thi co nghia la da het cac thu de lay => tra ve -1
         if (messages.length > 0) {
           pageCountRemain = pageCount + 1;
         } else {
@@ -321,8 +333,210 @@ module.exports = (io, socket) => {
         }
         socket.emit("FE_send_messages", { messages, pageCountRemain });
       } catch (error) {
-        console.log(error);
+        socket.emit("FE_ERROR", {
+          error: error.message,
+        });
       }
     },
   );
+
+  // phan video chat
+
+  //tao phong
+  socket.on("BE_caller_create_room", async ({ roomId }) => {
+    try {
+      console.log("BE_caller_create_room", socket.userId);
+      const ids = roomId.split("_");
+      let receiverId;
+      if (ids[0] === socket.userId) {
+        receiverId = ids[1];
+      } else {
+        receiverId = ids[0];
+      }
+
+      let room = await privateVideoChat.create({
+        roomId,
+        caller: {
+          info: socket.userId,
+          audio: true,
+          video: true,
+        },
+        callerSocketId: socket.id,
+      });
+      console.log(room);
+      // gui thong bao co nguoi goi cho nguoi duoc goi
+      let receiver = await User.findById(receiverId);
+      for (const receiverSocket of receiver.sockets) {
+        // gui cho tat ca cac socket khac cua nguoi gui tru socket hien tai cua nguoi gui
+        io.to(receiverSocket.socket).emit("FE_invited_to_room", {
+          roomId,
+          caller: socket.userId,
+          callerId: socket.id,
+        });
+      }
+    } catch (error) {
+      if (error.code) {
+        if (error.code === 11000) {
+          socket.emit("FE_ERROR", {
+            error: "Bạn đang trò chuyện với người này trên thiết bị khác",
+          });
+          return;
+        }
+      } else {
+        socket.emit("FE_ERROR", {
+          error: error.message,
+        });
+      }
+    }
+  });
+  // nguoi nhan vao phong
+  socket.on("BE_receiver_join_room", async ({ roomId }) => {
+    try {
+      console.log("BE_receiver_join_room", socket.userId);
+      const room = await privateVideoChat.findOne({ roomId });
+      if (room) {
+        if (room.receiverSocketId) {
+          throw new Error(
+            "Bạn đã được kết nối vơi người này trên thiết bị khác",
+          );
+        } else {
+          await privateVideoChat.findOneAndUpdate(
+            { roomId },
+            {
+              receiver: {
+                info: socket.userId,
+                video: true,
+                audio: true,
+              },
+              receiverSocketId: socket.id,
+            },
+          );
+          //xoa thong bao o cac socket !=
+          const receiver = await User.findOne({ _id: socket.userId });
+          for (const receiverSocket of receiver.sockets) {
+            if (receiverSocket.socket !== socket.id) {
+              io.to(receiverSocket).emit("FE_stop_chat_video_notifying");
+            }
+          }
+        }
+      }
+    } catch (error) {
+      socket.emit("FE_ERROR", {
+        error: error.message,
+      });
+    }
+  });
+
+  // nguoi nhan tu choi vao phong
+  socket.on("BE_receiver_refuse_joining", async ({ roomId, callerId }) => {
+    try {
+      console.log("BE_receiver_refuse_joining");
+      io.to(callerId).emit("FE_leave_room");
+      // huy phia nguoi nhan
+      const receiver = await User.findOne({ _id: socket.userId });
+      for (const receiverSocket of receiver.sockets) {
+        if (receiverSocket.socket !== socket.id) {
+          io.to(receiverSocket.socket).emit("FE_stop_chat_video_notifying", {
+            roomId,
+          });
+        }
+      }
+    } catch (error) {
+      socket.emit("FE_ERROR", {
+        error: error.message,
+      });
+    }
+    // //huy phia nguoi goi
+    // const room = await privateVideoChat.findOne({ roomId });
+    // io.to(room.callerSocketId).emit("FE_leave_room");
+  });
+
+  //khi nguoi duoc goi da vao phong thi lay info cua nguoi da o trong phong
+  socket.on("BE_video_room_joined", async ({ roomId, userId }) => {
+    try {
+      let room = await privateVideoChat.findOne({ roomId: roomId });
+      if (room.caller.info.toHexString() !== userId) {
+        console.log("BE_video_room_joined ");
+        socket.emit("FE_the_other_users", {
+          caller: room.caller,
+          callerSocketId: room.callerSocketId,
+        });
+      }
+    } catch (error) {
+      socket.emit("FE_ERROR", {
+        error: error.message,
+      });
+    }
+  });
+
+  // gui peer signal den nguoi khac trong phong
+  socket.on("BE_receiver_sending_signal", ({ callerSocketId, signal }) => {
+    console.log("BE_receiver_sending_signal");
+
+    io.to(callerSocketId).emit("FE_the_other_users_receive_signal", {
+      signal,
+      receiverSocketId: socket.id,
+      receiverInfo: socket.userId,
+    });
+  });
+
+  //gui signal vua duoc cac nguoi khac tao trong phong den nguoi gui signal(nguoi nhan cuoc goi)
+  socket.on(
+    "BE_the_other_users_return_signal",
+    ({ receiverSocketId, signal }) => {
+      console.log("BE_the_other_users_return_signal");
+      io.to(receiverSocketId).emit("FE_receive_receive_returned_signal", {
+        signal,
+        sender: socket.userId,
+      });
+    },
+  );
+
+  socket.on("BE_user_leave_room", () => {
+    leaveVideoChatRoomHandle(io, socket);
+  });
+  socket.on("disconnect", () => {
+    leaveVideoChatRoomHandle(io, socket);
+  });
+
+  //
 };
+// user leave room handler
+async function leaveVideoChatRoomHandle(io, socket) {
+  try {
+    let videoChatRoomJoined = await privateVideoChat.find({
+      $or: [{ callerSocketId: socket.id }, { receiverSocketId: socket.id }],
+    });
+    for (let index = 0; index < videoChatRoomJoined.length; index++) {
+      const chatRoom = videoChatRoomJoined[index];
+      if (chatRoom.callerSocketId === socket.id) {
+        if (chatRoom.receiverSocketId) {
+          io.to(chatRoom.receiverSocketId).emit("FE_leave_room");
+        } else {
+          const ids = chatRoom.roomId.split("_");
+          let receiverId;
+          if (ids[0] === socket.userId) {
+            receiverId = ids[1];
+          } else {
+            receiverId = ids[0];
+          }
+          const receiver = await User.findOne({ _id: receiverId });
+          for (const receiverSocket of receiver.sockets) {
+            io.to(receiverSocket.socket).emit("FE_stop_chat_video_notifying", {
+              roomId: chatRoom.roomId,
+            });
+          }
+        }
+      } else {
+        io.to(chatRoom.callerSocketId).emit("FE_leave_room");
+      }
+    }
+    let countDeletedRooms = await privateVideoChat.deleteMany({
+      $or: [{ callerSocketId: socket.id }, { receiverSocketId: socket.id }],
+    });
+  } catch (error) {
+    socket.emit("FE_ERROR", {
+      error: error.message,
+    });
+  }
+}

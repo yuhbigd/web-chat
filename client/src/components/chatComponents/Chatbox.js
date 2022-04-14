@@ -10,7 +10,10 @@ import { socket } from "../../socket";
 import _ from "lodash";
 import { updateFriend } from "../../slice/userSlice";
 import ChatBuble from "./ChatBuble";
-import { FaTelegramPlane } from "react-icons/fa";
+import { FaTelegramPlane, FaPhone } from "react-icons/fa";
+import Modal from "../Modal";
+import VideoChatRoom from "./videoChat/VideoChatRoom";
+import ReceiveCallModal from "./videoChat/ReceiveCallModal";
 function Chatbox(props) {
   const user = useSelector((state) => state.user);
   const room = useSelector((state) => state.room);
@@ -19,6 +22,13 @@ function Chatbox(props) {
   const dispatch = useDispatch();
   const [pageCount, setPageCount] = useState(0);
   const [firstTime, setFirstTime] = useState(true);
+
+  const [modalMessage, setModalMessage] = useState("");
+
+  const [videoRoom, setVideoRoom] = useState(false);
+
+  const [callNotficationModal, setCallNotficationModal] = useState(null);
+
   const observer = useRef();
   const lastDivElement = useCallback(
     (node) => {
@@ -50,6 +60,7 @@ function Chatbox(props) {
     [pageCount, room.messages, room.currentRoom],
   );
 
+  // khai bao khi chua co room cu the
   function createSocketEventHandleForChat(socket) {
     socket.off("FE_to_send_message");
     socket.on("FE_to_send_message", ({ friend, message, roomId }) => {
@@ -106,6 +117,43 @@ function Chatbox(props) {
       );
     });
   }
+  useEffect(() => {
+    socket.off("FE_invited_to_room");
+    socket.on("FE_invited_to_room", ({ roomId, caller, callerId }) => {
+      if (!videoRoom) {
+        setCallNotficationModal(
+          <ReceiveCallModal
+            yes={() => {
+              socket.emit("BE_receiver_join_room", { roomId });
+              setVideoRoom(
+                <VideoChatRoom
+                  goBack={() => {
+                    setVideoRoom(null);
+                  }}
+                  roomId={roomId}
+                />,
+              );
+              setCallNotficationModal(null);
+            }}
+            no={() => {
+              socket.emit("BE_receiver_refuse_joining", { roomId, callerId });
+              setCallNotficationModal(null);
+            }}
+            roomId={roomId}
+            caller={user.friends.find((friend) => {
+              return friend.info._id === caller;
+            })}
+          />,
+        );
+      }
+    });
+    socket.off("FE_stop_chat_video_notifying");
+    socket.on("FE_stop_chat_video_notifying", () => {
+      setCallNotficationModal(null);
+    });
+
+    return () => {};
+  }, [user.friends, videoRoom]);
 
   useEffect(() => {
     if (socket.connected) {
@@ -126,6 +174,10 @@ function Chatbox(props) {
       socket.on("FE_send_messages", ({ messages, pageCountRemain }) => {
         dispatch(getOldMessages({ messages }));
         setPageCount(pageCountRemain);
+      });
+      socket.off("FE_ERROR");
+      socket.on("FE_ERROR", ({ error }) => {
+        setModalMessage(error);
       });
       setFirstTime(true);
     }
@@ -185,6 +237,16 @@ function Chatbox(props) {
 
   return (
     <>
+      {modalMessage ? (
+        <Modal
+          hide={() => {
+            setModalMessage("");
+          }}
+          message={modalMessage}
+        />
+      ) : null}
+      {videoRoom}
+      {callNotficationModal}
       {room.currentRoom && (
         <div className="grow h-full overflow-auto w-[70%] bg-white flex gap-4 flex-col justify-between">
           <div
@@ -211,6 +273,27 @@ function Chatbox(props) {
               autoComplete="off"
               ref={inputRef}
             />
+            <button
+              className="focus:outline-none px-3 py-3 rounded-full
+              hover:bg-slate-200 bg-opacity-75"
+              title="gọi"
+              onClick={() => {
+                socket.emit("BE_caller_create_room", {
+                  roomId: room.currentRoom,
+                });
+
+                setVideoRoom(
+                  <VideoChatRoom
+                    goBack={() => {
+                      setVideoRoom(null);
+                    }}
+                    roomId={room.currentRoom}
+                  />,
+                );
+              }}
+            >
+              <FaPhone className="text-xl text-blue-600" />
+            </button>
             <button
               type="submit"
               className="focus:outline-none px-3 py-3 rounded-full

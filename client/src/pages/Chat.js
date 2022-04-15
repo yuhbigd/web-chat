@@ -9,7 +9,7 @@ function Chat(props) {
   // }, []);
   return (
     <div
-      className={`grow ${`h-[calc(100vh-60px)]`} w-screen bg-slate-200 flex gap-4`}
+      className={`grow ${`h-[calc(100vh-60px)]`} relative w-screen bg-slate-200 flex gap-4`}
     >
       <Sidebar />
       <Chatbox />

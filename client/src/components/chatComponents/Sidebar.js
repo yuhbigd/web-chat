@@ -31,7 +31,7 @@ function Sidebar() {
     }
   }
   return (
-    <ul className="bg-white w-[30%] overflow-auto custom_scrollbar flex gap-4 flex-col p-3 z-30">
+    <ul className="bg-white w-[30%] overflow-auto custom_scrollbar flex gap-4 flex-col p-3 z-30 ">
       <li className="relative">
         <button
           onClick={() => {

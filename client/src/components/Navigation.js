@@ -12,7 +12,7 @@ function Navigation(props, ref) {
   return (
     <nav
       onClick={props.onClick}
-      className="sticky top-0 left-0 bg-white w-full shadow sm:flex sm:justify-between"
+      className="sticky top-0 left-0 bg-white w-screen shadow sm:flex sm:justify-between z-[99]"
       ref={ref}
     >
       <div className="container m-auto flex justify-between items-center text-gray-700 z-50">

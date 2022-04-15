@@ -71,7 +71,13 @@ function App() {
 
           <Route
             path="/chat"
-            element={<Chat getNavHeight={getNavHeight} />}
+            element={
+              user.email ? (
+                <Chat getNavHeight={getNavHeight} />
+              ) : (
+                <Navigate to="/" replace />
+              )
+            }
           ></Route>
 
           <Route path="*" element={<Navigate to="/" replace />} />

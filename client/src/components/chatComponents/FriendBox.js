@@ -51,7 +51,7 @@ function FriendBox(props) {
         title="avatar"
         className="w-10 h-10 rounded-full object-cover my-auto"
       ></img>
-      <div className="relative grow">
+      <div className="relative grow ml-4">
         <h3 className="font-semibold friend_box_truncate">
           {props.friend.info.userName}
         </h3>

@@ -1,4 +1,5 @@
 const { getMessaging } = require("firebase-admin/messaging");
+const { findOneAndUpdate } = require("../Models/privateChat");
 const Chat = require("../Models/privateChat");
 const privateVideoChat = require("../Models/privateVideoChat");
 const User = require("../models/userModel");
@@ -363,7 +364,6 @@ module.exports = (io, socket) => {
         },
         callerSocketId: socket.id,
       });
-      console.log(room);
       // gui thong bao co nguoi goi cho nguoi duoc goi
       let receiver = await User.findById(receiverId);
       for (const receiverSocket of receiver.sockets) {
@@ -374,6 +374,7 @@ module.exports = (io, socket) => {
           callerId: socket.id,
         });
       }
+      socket.emit("FE_create_room_successful");
     } catch (error) {
       if (error.code) {
         if (error.code === 11000) {
@@ -446,9 +447,6 @@ module.exports = (io, socket) => {
         error: error.message,
       });
     }
-    // //huy phia nguoi goi
-    // const room = await privateVideoChat.findOne({ roomId });
-    // io.to(room.callerSocketId).emit("FE_leave_room");
   });
 
   //khi nguoi duoc goi da vao phong thi lay info cua nguoi da o trong phong
@@ -470,15 +468,19 @@ module.exports = (io, socket) => {
   });
 
   // gui peer signal den nguoi khac trong phong
-  socket.on("BE_receiver_sending_signal", ({ callerSocketId, signal }) => {
-    console.log("BE_receiver_sending_signal");
-
-    io.to(callerSocketId).emit("FE_the_other_users_receive_signal", {
-      signal,
-      receiverSocketId: socket.id,
-      receiverInfo: socket.userId,
-    });
-  });
+  socket.on(
+    "BE_receiver_sending_signal",
+    async ({ roomId, callerSocketId, signal }) => {
+      console.log("BE_receiver_sending_signal", roomId);
+      let room = await privateVideoChat.findOne({ roomId: roomId });
+      let receiver = room.receiver;
+      io.to(callerSocketId).emit("FE_the_other_users_receive_signal", {
+        signal,
+        receiverSocketId: socket.id,
+        receiver: receiver,
+      });
+    },
+  );
 
   //gui signal vua duoc cac nguoi khac tao trong phong den nguoi gui signal(nguoi nhan cuoc goi)
   socket.on(
@@ -492,7 +494,61 @@ module.exports = (io, socket) => {
     },
   );
 
+  //gui thong bao la 1 nguoi da mute
+  socket.on("BE_toggle_audio", async ({ roomId, audio, toSockets }) => {
+    let userId = socket.userId;
+    let room = await privateVideoChat.findOne({ roomId });
+    if (room.caller.info.toHexString() === userId) {
+      room = await privateVideoChat.findOneAndUpdate(
+        { roomId },
+        {
+          "caller.audio": audio,
+        },
+      );
+    } else {
+      room = await privateVideoChat.findOneAndUpdate(
+        { roomId },
+        {
+          "receiver.audio": audio,
+        },
+      );
+    }
+    for (const socket of toSockets) {
+      io.to(socket).emit("FE_toggle_audio", {
+        roomId,
+        audio,
+        userId,
+      });
+    }
+  });
+  socket.on("BE_toggle_video", async ({ roomId, video, toSockets }) => {
+    let userId = socket.userId;
+    let room = await privateVideoChat.findOne({ roomId });
+    if (room.caller.info.toHexString() === userId) {
+      room = await privateVideoChat.findOneAndUpdate(
+        { roomId },
+        {
+          "caller.video": video,
+        },
+      );
+    } else {
+      room = await privateVideoChat.findOneAndUpdate(
+        { roomId },
+        {
+          "receiver.video": video,
+        },
+      );
+    }
+    for (const socket of toSockets) {
+      io.to(socket).emit("FE_toggle_video", {
+        roomId,
+        video,
+        userId,
+      });
+    }
+  });
   socket.on("BE_user_leave_room", () => {
+    console.log("BE_user_leave_room");
     leaveVideoChatRoomHandle(io, socket);
   });
   socket.on("disconnect", () => {

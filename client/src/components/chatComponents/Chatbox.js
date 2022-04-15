@@ -151,8 +151,6 @@ function Chatbox(props) {
     socket.on("FE_stop_chat_video_notifying", () => {
       setCallNotficationModal(null);
     });
-
-    return () => {};
   }, [user.friends, videoRoom]);
 
   useEffect(() => {
@@ -180,6 +178,17 @@ function Chatbox(props) {
         setModalMessage(error);
       });
       setFirstTime(true);
+      socket.off("FE_create_room_successful");
+      socket.on("FE_create_room_successful", () => {
+        setVideoRoom(
+          <VideoChatRoom
+            goBack={() => {
+              setVideoRoom(null);
+            }}
+            roomId={room.currentRoom}
+          />,
+        );
+      });
     }
   }, [room.currentRoom]);
   useEffect(() => {
@@ -281,15 +290,6 @@ function Chatbox(props) {
                 socket.emit("BE_caller_create_room", {
                   roomId: room.currentRoom,
                 });
-
-                setVideoRoom(
-                  <VideoChatRoom
-                    goBack={() => {
-                      setVideoRoom(null);
-                    }}
-                    roomId={room.currentRoom}
-                  />,
-                );
               }}
             >
               <FaPhone className="text-xl text-blue-600" />

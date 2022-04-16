@@ -1,4 +1,4 @@
-const User = require("../models/userModel");
+const User = require("../MongodbModels/userModel");
 const { getMessaging } = require("firebase-admin/messaging");
 module.exports = async (io, socket) => {
   console.log("con", socket.id);

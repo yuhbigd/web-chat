@@ -1,6 +1,6 @@
 const jwt = require("jsonwebtoken");
 const { createToken } = require("../../RouterController/authController");
-const User = require("../../models/userModel");
+const User = require("../../MongodbModels/userModel");
 require("dotenv").config();
 
 //checking Token, if it's true then next else checking refresh Token

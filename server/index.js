@@ -10,9 +10,8 @@ require("./Firebase/firebase.config");
 global.fetch = fetch;
 const _ = require("lodash");
 const cors = require("cors");
-const { checkUser } = require("./middlewares/AuthMiddleware/checkUser");
 const clientRegisterHandler = require("./SocketHandler/clientRegisterHandler");
-const User = require("./models/userModel");
+const User = require("./MongodbModels/userModel");
 const chatWithFriendHandler = require("./SocketHandler/chatWithFriendHandler");
 global._ = _;
 
@@ -69,5 +68,5 @@ io.on("connection", (socket) => {
   });
 });
 server.listen(4000, () => {
-  console.log("server is listen on port 3001");
+  console.log("server is listen on port 4000");
 });

@@ -1,8 +1,7 @@
 const { getMessaging } = require("firebase-admin/messaging");
-const { findOneAndUpdate } = require("../Models/privateChat");
-const Chat = require("../Models/privateChat");
-const privateVideoChat = require("../Models/privateVideoChat");
-const User = require("../models/userModel");
+const Chat = require("../MongodbModels/privateChat");
+const privateVideoChat = require("../MongodbModels/privateVideoChat");
+const User = require("../MongodbModels/userModel");
 
 module.exports = (io, socket) => {
   socket.on("BE_notify_friend", async ({ friendId, userName, _id, avatar }) => {
@@ -65,7 +64,6 @@ module.exports = (io, socket) => {
         .send(message)
         .then((response) => {
           // Response is a message ID string.
-          console.log("Successfully sent message:", response);
         })
         .catch((error) => {
           console.log("Error sending message:", error);
@@ -274,7 +272,6 @@ module.exports = (io, socket) => {
         .send(notificationMessage)
         .then((response) => {
           // Response is a message ID string.
-          console.log("Successfully sent message:", response);
         })
         .catch((error) => {
           console.log("Error sending message:", error);
@@ -346,7 +343,6 @@ module.exports = (io, socket) => {
   //tao phong
   socket.on("BE_caller_create_room", async ({ roomId }) => {
     try {
-      console.log("BE_caller_create_room", socket.userId);
       const ids = roomId.split("_");
       let receiverId;
       if (ids[0] === socket.userId) {
@@ -393,7 +389,6 @@ module.exports = (io, socket) => {
   // nguoi nhan vao phong
   socket.on("BE_receiver_join_room", async ({ roomId }) => {
     try {
-      console.log("BE_receiver_join_room", socket.userId);
       const room = await privateVideoChat.findOne({ roomId });
       if (room) {
         if (room.receiverSocketId) {
@@ -431,7 +426,6 @@ module.exports = (io, socket) => {
   // nguoi nhan tu choi vao phong
   socket.on("BE_receiver_refuse_joining", async ({ roomId, callerId }) => {
     try {
-      console.log("BE_receiver_refuse_joining");
       io.to(callerId).emit("FE_leave_room");
       // huy phia nguoi nhan
       const receiver = await User.findOne({ _id: socket.userId });
@@ -454,7 +448,6 @@ module.exports = (io, socket) => {
     try {
       let room = await privateVideoChat.findOne({ roomId: roomId });
       if (room.caller.info.toHexString() !== userId) {
-        console.log("BE_video_room_joined ");
         socket.emit("FE_the_other_users", {
           caller: room.caller,
           callerSocketId: room.callerSocketId,
@@ -471,7 +464,6 @@ module.exports = (io, socket) => {
   socket.on(
     "BE_receiver_sending_signal",
     async ({ roomId, callerSocketId, signal }) => {
-      console.log("BE_receiver_sending_signal", roomId);
       let room = await privateVideoChat.findOne({ roomId: roomId });
       let receiver = room.receiver;
       io.to(callerSocketId).emit("FE_the_other_users_receive_signal", {
@@ -486,7 +478,6 @@ module.exports = (io, socket) => {
   socket.on(
     "BE_the_other_users_return_signal",
     ({ receiverSocketId, signal }) => {
-      console.log("BE_the_other_users_return_signal");
       io.to(receiverSocketId).emit("FE_receive_receive_returned_signal", {
         signal,
         sender: socket.userId,
@@ -548,7 +539,6 @@ module.exports = (io, socket) => {
     }
   });
   socket.on("BE_user_leave_room", () => {
-    console.log("BE_user_leave_room");
     leaveVideoChatRoomHandle(io, socket);
   });
   socket.on("disconnect", () => {

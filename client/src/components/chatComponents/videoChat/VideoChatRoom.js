@@ -105,7 +105,6 @@ function VideoChatRoom(props) {
       // nhan thong bao tat am thanh
       socket.off("FE_toggle_audio");
       socket.on("FE_toggle_audio", ({ roomId, audio, userId }) => {
-        console.log(userId, " - ", audio);
         setUserVideoAudio((preList) => {
           return {
             ...preList,

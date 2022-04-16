@@ -1,6 +1,5 @@
-const User = require("../models/userModel");
+const User = require("../MongodbModels/userModel");
 const jwt = require("jsonwebtoken");
-const sanitize = require("mongo-sanitize");
 require("dotenv").config();
 
 createToken = async function (user) {

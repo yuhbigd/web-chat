@@ -23,7 +23,6 @@ const publicKey = process.env.REACT_APP_FIREBASE_MESSAGING_PKEY;
 
 export const deleteOldToken = async () => {
   await deleteToken(messaging);
-  console.log("token has been deleted");
 };
 export function sendNotiToken() {
   getToken(messaging, { vapidKey: publicKey })

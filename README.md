@@ -13,6 +13,7 @@ Chạy trên localhost: git clone cái project này và chạy câu lệnh docke
 <br/>
 Backend chạy ở: localhost:4000.<br/>
 Frontend chạy ở: localhost:3000.<br/>
+(project không bao gồm .env file)
 <br/>
 This is a simple web chat application. It help user to send message to another user or start a video call with that user. This project uses simple-peer to create peer connection and create video-call.<br/>
 Technology I use:<br/>
@@ -23,3 +24,4 @@ How to run:<br/>
 Clone this git project and run docker-compose up command. Then, go to localhost:3000. This is the url of frontend and the Backend is running on localhost:4000.<br/>
 Backend: localhost:4000.<br/>
 Frontend: localhost:3000.<br/>
+(This project does not include .env files in client and server folder)
